@@ -134,10 +134,9 @@ class PhWidget(QWidget):
         self._x_slider = QSlider(Qt.Horizontal)
         self._x_slider.setFocusPolicy(Qt.StrongFocus)
         self._x_slider.setTickPosition(QSlider.TicksBothSides)
-        self._x_slider.setMaximum(151.5)
         self._x_slider.setTickInterval(15)
         self._x_slider.setSingleStep(1)
-        self._x_slider.setValue(float(self._window.orig_loc[0]))
+        self._x_slider.setValue(int(self._window.orig_loc[0]))
         
         self._r_slider = QDial()
         self._r_slider.setFocusPolicy(Qt.StrongFocus)
@@ -145,7 +144,7 @@ class PhWidget(QWidget):
         self._r_slider.setWrapping(True)
         self._r_slider.setMinimum(0)
         self._r_slider.setMaximum(360)
-        self._r_slider.setValue(float(self._window.orig_loc[2]))
+        self._r_slider.setValue(int(self._window.orig_loc[2]))
         
         self._y_slider = QSlider(Qt.Vertical)
         self._y_slider.setFocusPolicy(Qt.StrongFocus)
@@ -153,7 +152,7 @@ class PhWidget(QWidget):
         self._y_slider.setMaximum(40)
         self._y_slider.setTickInterval(10)
         self._y_slider.setSingleStep(1)
-        self._y_slider.setValue(float(self._window.orig_loc[1]))
+        self._y_slider.setValue(int(self._window.orig_loc[1]))
         
         btns_widget = QWidget()
         btns_layout = QHBoxLayout()

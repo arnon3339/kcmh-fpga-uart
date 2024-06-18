@@ -153,7 +153,6 @@ class RunWidget(QWidget):
                          
         self._line_edits["num_alpides"].setText("6")
         self._line_edits["num_alpides"].setToolTip("Number of ALPIDEs to do the test: 1 - 6")
-        self._line_edits["num_alpides"].editingFinished.connect(lambda x="num_alpides": self.validate_fields(x))
         self._line_edits["num_events"].setText("30000")
         self._line_edits["num_events"].setToolTip("The total number of events to collect data")
         self._line_edits["strobe"].setText("100")
@@ -178,6 +177,7 @@ class RunWidget(QWidget):
         self._line_edits["Y step (mm)"].setText("0")
         self._line_edits["R step (degree)"].setText("0")
         for k, v in self._line_edits.items():
+            v.editingFinished.connect(lambda x=k: self.validate_fields(x))
             v.setFixedSize(150, 30)
             v.setAlignment(Qt.AlignmentFlag.AlignCenter)
             v.setStyleSheet("""QLineEdit{
@@ -786,6 +786,7 @@ class RunWidget(QWidget):
         }
 
     def enable_beam(self):
+        # try:
         fpga_data = self.get_fpga_data()
         ser = serial.Serial(port=get_port("fpga"), baudrate=fpga_data["baudrate"], parity=fpga_data["parity"],
                         bytesize=fpga_data["bytesize"], stopbits=fpga_data["stopbits"], timeout=1)
@@ -801,10 +802,9 @@ class RunWidget(QWidget):
             ser.write(b'\xF2')
             self._window.running(False)
             self._launch_eudaq_default.setDisabled(True)
-
-            
-            
         ser.close()
+        # except:
+        #     pass
     
     def set_ph_loc(self, loc_str):
         self._ph_x_label.setText(loc_str[0])
@@ -904,24 +904,55 @@ class RunWidget(QWidget):
             self._enable_checkbox.setDisabled(False)
 
     def validate_fields(self, kind):
-        if kind == "num_alpides":
-            try:
-                value = int(self._line_edits["num_alpides"].text())
-            except:
-                value = -1
-            if value not in range(1, 7):
-                fail_dialog = QMessageBox()
-                fail_dialog.setIcon(QMessageBox.Icon.Critical)
-                fail_dialog.setText("Invalid number of ALPIDEs input.")
-                fail_dialog.setWindowTitle("Input error")
-                fail_dialog.setDetailedText("Please reconnect devices.")
-                fail_dialog.setStandardButtons(QMessageBox.Ok) 
-                fail_dialog.exec_()
-                self._line_edits["num_alpides"].setStyleSheet("""
-                    QLineEdit{
-                        border: 4px solid rgb(255, 0, 0);
-                        font-size: 20px;
-                    }
-                                                              """)
-                self._line_edits["num_alpides"].setText("")
-                self._line_edits["num_alpides"].setFocus()
+        # if kind == "num_alpides":
+        msg = {
+            "num_alpides": ["number of ALPIDEs", list(range(1, 7))],
+            "num_events": ["number of events", list(range(1, 100_000))],
+            "strobe": ["STROBE value", list(range(100, 801))],
+            "ithr": ["I theshold", list(range(30, 121))],
+            "energy": ["proton energy", list(range(70, 241))],
+            "MU": ["MU", list(range(1, 100000))],
+            "current": ["current", list(range(4, 300))],
+            "Exposure time (ms)": ["exposure time", list(range(1, 100_000))],
+            "Beam delay (ms)": ["beam dalay", list(range(0, 256))],
+            "Loops": ["number of loops", list(range(1, 20))],
+            "Trigger Freq. (Hz)": ["trigger frequency", list(range(1, 99001))],
+            "X step (mm)": ["X step length", [-float(self._window.orig_loc[0]), 150 - float(self._window.orig_loc[0])]],
+            "Y step (mm)": ["Y step length", [-float(self._window.orig_loc[1]), 40 - float(self._window.orig_loc[1])]],
+            "R step (degree)": ["angle step", list(range(0, 360))]
+        }
+        try:
+            if kind not in ["X step (mm)", "Y step (mm)"]:
+                value = int(self._line_edits[kind].text())
+                if value not in msg[kind][1]:
+                    raise ValueError
+            else:
+                value = float(self._line_edits[kind].text())
+                if value < msg[kind][1][0] or value > msg[kind][1][1]:
+                    raise ValueError
+        except ValueError:
+            valiadated_popup(msg[kind][0], msg[kind][1]).exec_()
+            self._line_edits[kind].setStyleSheet("""
+                QLineEdit{
+                    border: 4px solid rgb(255, 0, 0);
+                    font-size: 20px;
+                }
+                                                            """)
+            self._line_edits[kind].setText("")
+            self._line_edits[kind].setFocus()
+        else:
+            self._line_edits[kind].setStyleSheet("""
+                QLineEdit{
+                    border: 1px solid rgb(0, 0, 255);
+                    font-size: 20px;
+                }
+                                                            """)
+
+def valiadated_popup(msg, allowed_values):
+    fail_dialog = QMessageBox()
+    fail_dialog.setIcon(QMessageBox.Icon.Critical)
+    fail_dialog.setText("Invalid {} input.".format(msg))
+    fail_dialog.setWindowTitle("Input error")
+    fail_dialog.setDetailedText("[{}, {}]".format(allowed_values[0], allowed_values[-1]))
+    fail_dialog.setStandardButtons(QMessageBox.Ok) 
+    return fail_dialog

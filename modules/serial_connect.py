@@ -8,8 +8,12 @@ def get_port(device):
     # print(ports)
     # for p in ports:
     #     print(p.device)
+    if device == "fpga":
+        return "/dev/ttyUSB1"
     for port, desc, hwid in sorted(ports):
         if device_SNR[device] in hwid:
+        # if device_SNR[device] in hwid and "LOCATION=1-3:1.0" in hwid:
+            print(port)
             # print("{}: {} [{}]".format(port, desc, hwid))
             return port
     raise ConnectionError
