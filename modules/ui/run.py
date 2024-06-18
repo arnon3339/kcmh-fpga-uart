@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     )
 from PyQt5.QtCore import Qt, QRect, QSize
 from PyQt5.QtGui import QIcon
-from modules import eudaq, serial_read
+from modules import eudaq
 from modules.ui.rootwidget import RootWidget
 from modules.ui.run_progress import RunProgress
 from modules.serial_connect import get_port
