@@ -729,6 +729,13 @@ class RunWidget(QWidget):
             fail_dialog.setStandardButtons(QMessageBox.Ok) 
             fail_dialog.exec_()
             return
+        
+        fpga_data = self.get_fpga_data()
+        ser = serial.Serial(port=get_port("fpga"), baudrate=fpga_data["baudrate"], parity=fpga_data["parity"],
+                        bytesize=fpga_data["bytesize"], stopbits=fpga_data["stopbits"], timeout=1)
+        
+        for b in fpga_data["byte_start_list"]:
+            ser.write(b)
         self._pid = eudaq.default_run(self._line_edits, self._outpath_label.text())
         self._run_progress_dialog = RunProgress(self)
         self._run_progress_dialog.exec_()

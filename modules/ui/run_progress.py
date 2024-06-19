@@ -19,6 +19,7 @@ import math
 import time
 import asyncio
 import datetime
+import subprocess
 
 force_stop = False
 
@@ -44,16 +45,16 @@ class ProgressWorker(QRunnable):
             parity = serial.PARITY_NONE
             bytesize = serial.EIGHTBITS
             stopbits = serial.STOPBITS_ONE
-            trigger_f_bin = self.kwargs['trigger_f_bin']
-            trigger_f_byte_list = [int(trigger_f_bin[:-8], 2).to_bytes(1, 'big'), int(trigger_f_bin[-8:], 2).to_bytes(1, 'big')]
-            alpide_delay = self.kwargs['alpide_delay']
-            alpide_delay_byte = int(alpide_delay, 2).to_bytes(1, 'big')
+            # trigger_f_bin = self.kwargs['trigger_f_bin']
+            # trigger_f_byte_list = [int(trigger_f_bin[:-8], 2).to_bytes(1, 'big'), int(trigger_f_bin[-8:], 2).to_bytes(1, 'big')]
+            # alpide_delay = self.kwargs['alpide_delay']
+            # alpide_delay_byte = int(alpide_delay, 2).to_bytes(1, 'big')
             ser = serial.Serial(port=get_port("fpga"), baudrate=baudrate, parity=parity,
                             bytesize=bytesize, stopbits=stopbits, timeout=1)
-            byte_start_list = [b'\x00', b'\x01', b'\x00', b'\x00', b'\x00', b'\x00', alpide_delay_byte, trigger_f_byte_list[0],
-                    trigger_f_byte_list[1]]
-            for b in byte_start_list:
-                ser.write(b)
+            # byte_start_list = [b'\x00', b'\x01', b'\x00', b'\x00', b'\x00', b'\x00', alpide_delay_byte, trigger_f_byte_list[0],
+            #         trigger_f_byte_list[1]]
+            # for b in byte_start_list:
+            #     ser.write(b)
             step_current_datetime = datetime.datetime.now()
             current_time = datetime.datetime.now()
             value = 0
@@ -129,6 +130,11 @@ class RunProgress(QDialog):
         self._is_thread = False
         self._threadpool = QThreadPool()
         self.init_ui()
+        self.closeEvent.connect(self.close_running)
+    
+    def close_running(self):
+        subprocess.run(['tmux', 'kill-session', '-t', 'ITS3'])
+        print("closing running")
         
     def init_ui(self):
         m_layout = QVBoxLayout()
